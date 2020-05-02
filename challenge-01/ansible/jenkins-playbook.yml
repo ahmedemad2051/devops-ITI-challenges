@@ -5,42 +5,48 @@
   vars:
     repository: ahmedemad2051
     image_name: jenkins_docker
+    tag: 4
   tasks:
-    # - name: upgrade all packages
-    #   yum:
-    #     name: '*'
-    #     state: latest
-    # - name: install docker
-    #   yum:
-    #       name: docker
-    #       state: latest
-    # - name: Install Docker Module for Python
-    #   pip:
-    #     name: docker
-    # - name: Start service docker, if not started
-    #   service:
-    #     name: docker
-    #     state: started               
-    # - name: Creates jenkins_home directory
-    #   file:
-    #       path: /jenkins_home
-    #       state: directory
+    - name: upgrade all packages
+      yum:
+        name: '*'
+        state: latest
+    - name: install docker
+      yum:
+          name: docker
+          state: latest
+    - name: Install Docker Module for Python
+      pip:
+        name: docker
+    - name: Start service docker, if not started
+      service:
+        name: docker
+        state: started               
+    - name: Creates jenkins_home directory
+      file:
+          path: /jenkins_home
+          state: directory
     - name: Download Dockerfile
       get_url:
         url: https://raw.githubusercontent.com/ahmedemad2051/devops-ITI-challenges/master/challenge-01/ansible/Dockerfile
         dest: /opt/Dockerfile
         mode: '766'
+    - name: login to docker
+      docker_login:
+        username: "{{lookup('env','docker_user')}}"
+        password: "{{lookup('env','docker_pass')}}"    
     - name: build new image jenkins with docker
       docker_image:
-        name: "{{image_name}}:latest"
-        repository: "{{repository}}/{{image_name}}:latest"
+        name: "{{image_name}}:{{tag}}"
+        repository: "{{repository}}/{{image_name}}:{{tag}}"
         build:
           path: /opt
-        source: build        
+        source: build 
+        push: yes       
     - name: create jenkins container
       docker_container:
             name: jenkins-container
-            image: "{{image_name}}:lts"
+            image: "{{repository}}/{{image_name}}:{{tag}}"
             user: root
             recreate: yes
             state: started
